@@ -1,8 +1,12 @@
 
+
 import requests
 from bs4 import BeautifulSoup
 import random
 import time
+from flask import Flask, jsonify
+
+app = Flask(__name__)
 
 # Static list of user agents
 user_agents = [
@@ -28,10 +32,11 @@ def scrape_pinterest(url):
     image_urls = [img.get('src') for img in images if img.get('src')]
     return image_urls
 
+@app.route('/scrape', methods=['GET'])
 def main():
     url = 'https://www.pinterest.com/'
     image_urls = scrape_pinterest(url)
-    print(image_urls)
+    return jsonify({'image_urls': image_urls})
 
 if __name__ == '__main__':
-    main()
+    app.run(host='0.0.0.0', port=8080)
