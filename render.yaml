@@ -1,0 +1,16 @@
+
+services:
+  - type: web
+    name: pinterest-scraper
+    env:
+      QUERY: cat
+      COUNT: 5
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: QUERY
+        value: $QUERY
+      - key: COUNT
+        value: $COUNT
