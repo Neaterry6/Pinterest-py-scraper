@@ -1,8 +1,9 @@
 import requests
-from bs4 import BeautifulSoup
 import random
 import os
+import json
 from flask import Flask, jsonify
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
@@ -22,9 +23,24 @@ def scrape_pinterest(keyword, num):
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        images = soup.find_all('img')
-        image_urls = [img.get('src') for img in images if img.get('src')]
-        return image_urls[:num]
+
+        # Pinterest embeds JSON in a script tag with id="__PWS_DATA__"
+        data_script = soup.find('script', id="__PWS_DATA__")
+        if not data_script or not data_script.string:
+            return []
+
+        data_json = json.loads(data_script.string)
+
+        # Navigate into the JSON to find pin images
+        pins = data_json.get("props", {}).get("initialReduxState", {}).get("pins", {})
+        results = []
+        for pin in pins.values():
+            if "images" in pin and "orig" in pin["images"]:
+                results.append(pin["images"]["orig"]["url"])
+            if len(results) >= num:
+                break
+
+        return results
     except Exception as e:
         return [f"Error: {str(e)}"]
 
