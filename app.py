@@ -1,55 +1,37 @@
 
-
-import os
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from fake_useragent import UserAgent
 import random
+import time
 
-def get_pinterest_images(query, count):
-    url = "https://www.pinterest.com/"
-    user_agent = UserAgent()
-    user_agents = [user_agent.random for _ in range(10)]
-    proxies = [
-        'http://209.50.52.162:9050',
-        'http://51.15.154.144:8080',
-        'http://138.197.104.72:8080',
-        # Add more proxies here
-    ]
-    image_urls = []
-    for _ in range(count):
-        proxy = random.choice(proxies)
-        user_agent = random.choice(user_agents)
-        headers = {
-            "User-Agent": user_agent
-        }
-        params = {
-            "q": query
-        }
-        response = requests.get(url, headers=headers, params=params, proxies={'http': proxy, 'https': proxy})
-        soup = BeautifulSoup(response.content, "html.parser")
-        for pin in soup.find_all("img"):
-            image_url = pin.get("src")
-            if image_url:
-                image_urls.append(image_url)
+# Static list of user agents
+user_agents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0',
+    'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.3',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+]
+
+def get_user_agent():
+    return random.choice(user_agents)
+
+def scrape_pinterest(url):
+    user_agent = get_user_agent()
+    headers = {'User-Agent': user_agent}
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    images = soup.find_all('img')
+    image_urls = [img.get('src') for img in images if img.get('src')]
     return image_urls
 
-def send_images(image_urls):
-    print("Image URLs:")
-    for url in image_urls:
-        print(url)
-
 def main():
-    query = "cat"
-    count = 5
-    image_urls = get_pinterest_images(query, count)
-    send_images(image_urls)
+    url = 'https://www.pinterest.com/'
+    image_urls = scrape_pinterest(url)
+    print(image_urls)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
